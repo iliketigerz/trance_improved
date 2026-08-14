@@ -172,6 +172,7 @@ public:
     });
 
     Bind(wxEVT_PAINT, [&](const wxPaintEvent&) {
+     
       wxPaintDC dc{this};
       int width = 0;
       int height = 0;
@@ -193,7 +194,7 @@ public:
       dc.DrawBitmap(_bitmap, 0, 0, false);
       dc.SetFont(*wxNORMAL_FONT);
       dc.SetTextForeground(*wxWHITE);
-      if (!_info.empty()) {
+      if (_image && !_info.empty()) { //Temp fix to avoid crash if anim selected before img
         dc.DrawText(std::to_string(_image->GetWidth()) + "x" + std::to_string(_image->GetHeight()) +
                         " [" + _info + "]",
                     4, 4);
@@ -961,14 +962,15 @@ void ThemePage::RefreshTree(wxTreeListItem item)
     const auto& images = _complete_theme->image_path();
     const auto& anims = _complete_theme->animation_path();
     const auto& fonts = _complete_theme->font_path();
+
     if (_path_selected != path) {
       auto full_path = root + "/" + path;
-      if (std::find(images.begin(), images.end(), path) != images.end()) {
+      if (std::find(images.begin(), images.end(), path) != images.end()) { //Images
         _current_font.clear();
         _image_panel->SetImage(load_image(full_path));
         _image_panel->SetInfo(GetFileSize(full_path));
       }
-      if (std::find(anims.begin(), anims.end(), path) != anims.end()) {
+      if (std::find(anims.begin(), anims.end(), path) != anims.end()) { //Gifs, webms. Crashes if image not selected first?
         _current_font.clear();
         _image_panel->SetAnimation(load_animation(full_path));
         _image_panel->SetInfo(GetFileSize(full_path));

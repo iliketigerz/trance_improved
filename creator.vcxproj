@@ -46,7 +46,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -82,6 +82,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(Platform)\$(Configuration)\creator\</IntDir>
+    <ExecutablePath>$(VC_ExecutablePath_x64);$(WindowsSdk_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot);$(FxCopDir);$(PATH)</ExecutablePath>
+    <IncludePath>$(SolutionDir)dependencies\x64\Release\include;$(IncludePath)</IncludePath>
+    <ReferencePath>$(VC_ReferencesPath_x64);$(WindowsSDK_ReferencesPath_x64);$(FrameworkPathOverride)</ReferencePath>
+    <LibraryPath>$(SolutionDir)dependencies\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -104,6 +108,11 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y /I "$(SolutionDir)dependencies\Win32\Release\*.dll" "$(OutDir)"
+xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
+      <Message>Copy dlls and runtime assets to the debug folder so it actually works</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -177,6 +186,15 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y /I "$(SolutionDir)dependencies\x64\Release\*.dll" "$(OutDir)"
+xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
+      <Message>Copy dlls and runtime assets (eg fonts) to the debug folder so it works</Message>
+    </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\common\media\image.cpp" />
