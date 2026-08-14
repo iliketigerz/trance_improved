@@ -274,6 +274,7 @@ bool is_image(const std::string& path)
 bool is_animation(const std::string& path)
 {
   // Should really check is_gif_animated(), but it takes far too long.
+    
   return ext_is(path, "webm") || ext_is(path, "gif");
 }
 
