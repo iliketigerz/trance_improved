@@ -104,6 +104,10 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy dlls to the debug folder so it will actually work</Message>
+      <Command>xcopy /Y /I "$(SolutionDir)dependencies\Win32\Release\*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
