@@ -49,8 +49,7 @@ CreatorFrame::CreatorFrame(const std::string& executable_path, const std::string
                     "Validate the current session");
   menu_file->Append(ID_EXPORT_VIDEO, "Export &video...\tCtrl+V",
                     "Export the current session as a video");
-  menu_file->Append(ID_EXPORT_ARCHIVE, "Export &archive...\tCtrl+A",
-                    "Export the current session as a packed session archive");
+  //menu_file->Append(ID_EXPORT_ARCHIVE, "Export &archive...\tCtrl+A", "Export the current session as a packed session archive");
   menu_file->AppendSeparator();
   menu_file->Append(ID_EDIT_SYSTEM_CONFIG, "&Edit system settings...\tCtrl+E",
                     "Edit global system settings that apply to all sessions");
@@ -61,7 +60,7 @@ CreatorFrame::CreatorFrame(const std::string& executable_path, const std::string
   _menu_bar->Enable(ID_LAUNCH_SESSION, false);
   _menu_bar->Enable(ID_VALIDATE_SESSION, false);
   _menu_bar->Enable(ID_EXPORT_VIDEO, false);
-  _menu_bar->Enable(ID_EXPORT_ARCHIVE, false);
+ // _menu_bar->Enable(ID_EXPORT_ARCHIVE, false);
   SetMenuBar(_menu_bar);
   CreateStatusBar();
 
@@ -144,7 +143,7 @@ CreatorFrame::CreatorFrame(const std::string& executable_path, const std::string
          _menu_bar->Enable(ID_LAUNCH_SESSION, true);
          _menu_bar->Enable(ID_VALIDATE_SESSION, true);
          _menu_bar->Enable(ID_EXPORT_VIDEO, true);
-         _menu_bar->Enable(ID_EXPORT_ARCHIVE, true);
+         //_menu_bar->Enable(ID_EXPORT_ARCHIVE, false); //Disabled as implementation incomplete
        },
        wxID_SAVE);
 
@@ -579,7 +578,7 @@ bool CreatorFrame::OpenSession(const std::string& path)
     _menu_bar->Enable(ID_LAUNCH_SESSION, true);
     _menu_bar->Enable(ID_VALIDATE_SESSION, true);
     _menu_bar->Enable(ID_EXPORT_VIDEO, true);
-    _menu_bar->Enable(ID_EXPORT_ARCHIVE, true);
+    //_menu_bar->Enable(ID_EXPORT_ARCHIVE, true);
     MakeDirty(false);
     return true;
   } catch (const std::exception& e) {
