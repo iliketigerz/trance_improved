@@ -358,6 +358,8 @@ void Director::change_visual(uint32_t length)
     }
   }
 
+  std::cout << "Visual effect: " << trance_pb::Program_VisualType_Name(t) << std::endl;
+
   if (_visual && t == _last_visual_selection) {
     _visual->reset();
     return;
