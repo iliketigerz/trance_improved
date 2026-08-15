@@ -168,7 +168,7 @@ xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\ffmpeg\include;$(SolutionDir)\dependencies\include;$(SolutionDir)\src;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\libwebp\include;$(SolutionDir)dependencies\ffmpeg\include;$(SolutionDir)\dependencies\include;$(SolutionDir)\src;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;GLEW_STATIC;OVR_OS_WIN32;D_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4800;4005</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -177,8 +177,8 @@ xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\ffmpeg\lib;$(SolutionDir)\dependencies\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>flac.lib;vorbis.lib;vorbisfile.lib;ogg.lib;openal32.lib;openvr_api.lib;gflags.lib;
+      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\libwebp\lib;$(SolutionDir)dependencies\ffmpeg\lib;$(SolutionDir)\dependencies\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libwebp.lib;flac.lib;vorbis.lib;vorbisfile.lib;ogg.lib;openal32.lib;openvr_api.lib;gflags.lib;
 sfml-audio-s.lib;
 sfml-system-s.lib;
 sfml-graphics-s.lib;

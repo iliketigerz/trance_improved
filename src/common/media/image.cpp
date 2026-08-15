@@ -9,6 +9,10 @@
 #include "jpgd/jpgd.h"
 #pragma warning(pop)
 
+extern "C" {
+#include <webp/decode.h>
+}
+
 std::vector<GLuint> Image::textures_to_delete;
 std::mutex Image::textures_to_delete_mutex;
 
@@ -121,6 +125,53 @@ Image load_image(const std::string& path)
 
     Image image{uint32_t(width), uint32_t(height), data};
     free(data);
+    std::cout << ".";
+    return image;
+  }
+
+  // Load WebPs with libwebp.
+  if (ext_is(path, "webp")) {
+    FILE* file = nullptr;
+
+    if (fopen_s(&file, path.c_str(), "rb") != 0 || !file) {
+      std::cerr << "\ncouldn't open " << path << std::endl;
+      return {};
+    }
+
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (file_size <= 0) {
+      fclose(file);
+      std::cerr << "\ncouldn't load " << path << std::endl;
+      return {};
+    }
+
+    std::vector<uint8_t> file_data(static_cast<size_t>(file_size));
+
+    if (fread(file_data.data(), 1, file_data.size(), file) != file_data.size()) {
+      fclose(file);
+      std::cerr << "\ncouldn't load " << path << std::endl;
+      return {};
+    }
+
+    fclose(file);
+
+    int width = 0;
+    int height = 0;
+
+    uint8_t* data = WebPDecodeRGBA(file_data.data(), file_data.size(), &width, &height);
+
+    if (!data) {
+      std::cerr << "\ncouldn't decode WebP " << path << std::endl;
+      return {};
+    }
+
+    Image image{static_cast<uint32_t>(width), static_cast<uint32_t>(height), data};
+
+    WebPFree(data);
+
     std::cout << ".";
     return image;
   }

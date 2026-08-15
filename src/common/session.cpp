@@ -268,7 +268,7 @@ std::string make_relative(const std::string& from, const std::string& to)
 
 bool is_image(const std::string& path)
 {
-  return ext_is(path, "png") || ext_is(path, "bmp") || ext_is(path, "jpg") || ext_is(path, "jpeg");
+  return ext_is(path, "png") || ext_is(path, "bmp") || ext_is(path, "jpg") || ext_is(path, "jpeg")  || ext_is(path, "webp");
 }
 
 bool is_animation(const std::string& path)
