@@ -13,6 +13,14 @@
 #include <libwebm/mkvreader.hpp>
 #pragma warning(pop)
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/error.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+}
+
 class Image;
 struct GifFileType;
 
@@ -73,6 +81,39 @@ private:
   vpx_codec_iter_t _it = nullptr;
   const vpx_image_t* _image = nullptr;
   std::unique_ptr<uint8_t[]> _data;
+};
+
+class Mp4Streamer : public Streamer
+{
+public:
+  explicit Mp4Streamer(const std::string& path);
+  ~Mp4Streamer() override;
+
+  bool success() const override;
+  void reset() override;
+  Image next_frame() override;
+
+private:
+  void codec_error(const std::string& error);
+
+  std::string _path;
+
+  AVFormatContext* _format_ctx = nullptr;
+  AVCodecContext* _codec_ctx = nullptr;
+  const AVCodec* _codec = nullptr;
+  AVStream* _video_stream = nullptr;
+
+  AVFrame* _frame = nullptr;
+  AVFrame* _rgb_frame = nullptr;
+  AVPacket* _packet = nullptr;
+  SwsContext* _sws_ctx = nullptr;
+
+  int _video_stream_index = -1;
+
+  std::unique_ptr<uint8_t[]> _pixels;
+
+  bool _success = false;
+  bool _eof = false;
 };
 
 bool is_gif_animated(const std::string& path);

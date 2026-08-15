@@ -168,7 +168,7 @@ xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\dependencies\include;$(SolutionDir)\src;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\ffmpeg\include;$(SolutionDir)\dependencies\include;$(SolutionDir)\src;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;GLEW_STATIC;OVR_OS_WIN32;D_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4800;4005</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -177,8 +177,13 @@ xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\dependencies\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;winmm.lib;shlwapi.lib;opengl32.lib;glew.lib;freetype.lib;jpeg.lib;libgif.a;openvr_api.lib;sfml-system-s.lib;sfml-window-s.lib;sfml-graphics-s.lib;sfml-audio-s.lib;libx264.lib;libwebm.lib;vpxmd.lib;LibOVR.lib;libprotobuf.lib;gflags.lib;openal32.lib;flac.lib;ogg.lib;vorbis.lib;vorbisfile.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\ffmpeg\lib;$(SolutionDir)\dependencies\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>flac.lib;vorbis.lib;vorbisfile.lib;ogg.lib;openal32.lib;openvr_api.lib;gflags.lib;
+sfml-audio-s.lib;
+sfml-system-s.lib;
+sfml-graphics-s.lib;
+sfml-window-s.lib;
+LibOVR.lib;glew.lib;ws2_32.lib;winmm.lib;shlwapi.lib;avcodec.lib;avformat.lib;avutil.lib;swscale.lib;libx264.lib;libwebm.lib;freetype.lib;vpxmd.lib;opengl32.lib;jpeg.lib;libgif.a;sfml-system-s.lib;sfml-graphics-s.lib;sfml-window-s.lib;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -192,7 +197,8 @@ xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
     </CustomBuildStep>
     <PostBuildEvent>
       <Command>xcopy /Y /I "$(SolutionDir)dependencies\x64\Release\*.dll" "$(OutDir)"
-xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"</Command>
+xcopy /Y /I "$(SolutionDir)runtime\*.ttf" "$(OutDir)"
+xcopy /Y /I "$(SolutionDir)dependencies\ffmpeg\bin\*.dll" "$(OutDir)"</Command>
       <Message>Copy dlls and runtime assets (eg fonts) to the debug folder so it works</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

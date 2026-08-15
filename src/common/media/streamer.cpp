@@ -59,7 +59,7 @@ Image GifStreamer::next_frame()
   bool transparency = false;
   uint8_t transparency_byte = 0;
   // Delay time in hundredths of a second. Ignore it; it messes with the
-  // rhythm.
+  // rhythm. > This is why gifs can appear sped up in the preview window.
   int delay_time = 1;
   for (int j = 0; j < frame.ExtensionBlockCount; ++j) {
     const auto& block = frame.ExtensionBlocks[j];
@@ -305,6 +305,239 @@ bool is_gif_animated(const std::string& path)
   return frames > 0;
 }
 
+Mp4Streamer::Mp4Streamer(const std::string& path) : _path{path}
+{
+  int ret = 0;
+
+  ret = avformat_open_input(&_format_ctx, path.c_str(), nullptr, nullptr);
+  if (ret < 0) {
+    codec_error("opening file");
+    return;
+  }
+
+  ret = avformat_find_stream_info(_format_ctx, nullptr);
+  if (ret < 0) {
+    codec_error("reading stream information");
+    return;
+  }
+
+  for (unsigned i = 0; i < _format_ctx->nb_streams; ++i) {
+    AVStream* stream = _format_ctx->streams[i];
+
+    if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+      _video_stream_index = static_cast<int>(i);
+      _video_stream = stream;
+      break;
+    }
+  }
+
+  if (!_video_stream) {
+    std::cerr << "couldn't load " << path << ": no video track found" << std::endl;
+    return;
+  }
+
+  _codec = avcodec_find_decoder(_video_stream->codecpar->codec_id);
+  if (!_codec) {
+    std::cerr << "couldn't load " << path << ": no decoder found for codec "
+              << _video_stream->codecpar->codec_id << std::endl;
+    return;
+  }
+
+  _codec_ctx = avcodec_alloc_context3(_codec);
+  if (!_codec_ctx) {
+    std::cerr << "couldn't load " << path << ": couldn't allocate codec context" << std::endl;
+    return;
+  }
+
+  ret = avcodec_parameters_to_context(_codec_ctx, _video_stream->codecpar);
+
+  if (ret < 0) {
+    codec_error("copying codec parameters");
+    return;
+  }
+
+  ret = avcodec_open2(_codec_ctx, _codec, nullptr);
+  if (ret < 0) {
+    codec_error("opening decoder");
+    return;
+  }
+
+  _frame = av_frame_alloc();
+  _rgb_frame = av_frame_alloc();
+  _packet = av_packet_alloc();
+
+  if (!_frame || !_rgb_frame || !_packet) {
+    std::cerr << "couldn't load " << path << ": couldn't allocate decoding structures" << std::endl;
+    return;
+  }
+
+  const int width = _codec_ctx->width;
+  const int height = _codec_ctx->height;
+
+  _sws_ctx = sws_getContext(width, height, _codec_ctx->pix_fmt, width, height, AV_PIX_FMT_RGBA,
+                            SWS_BILINEAR, nullptr, nullptr, nullptr);
+
+  if (!_sws_ctx) {
+    std::cerr << "couldn't load " << path << ": couldn't create pixel conversion context"
+              << std::endl;
+    return;
+  }
+
+  const int buffer_size = av_image_get_buffer_size(AV_PIX_FMT_RGBA, width, height, 1);
+
+  if (buffer_size <= 0) {
+    std::cerr << "couldn't load " << path << ": invalid output image size" << std::endl;
+    return;
+  }
+
+  _pixels.reset(new uint8_t[buffer_size]);
+
+  ret = av_image_fill_arrays(_rgb_frame->data, _rgb_frame->linesize, _pixels.get(), AV_PIX_FMT_RGBA,
+                             width, height, 1);
+
+  if (ret < 0) {
+    codec_error("creating RGB frame");
+    return;
+  }
+
+  _success = true;
+}
+
+Mp4Streamer::~Mp4Streamer()
+{
+  if (_sws_ctx) {
+    sws_freeContext(_sws_ctx);
+    _sws_ctx = nullptr;
+  }
+
+  if (_packet) {
+    av_packet_free(&_packet);
+  }
+
+  if (_rgb_frame) {
+    av_frame_free(&_rgb_frame);
+  }
+
+  if (_frame) {
+    av_frame_free(&_frame);
+  }
+
+  if (_codec_ctx) {
+    avcodec_free_context(&_codec_ctx);
+  }
+
+  if (_format_ctx) {
+    avformat_close_input(&_format_ctx);
+  }
+}
+
+bool Mp4Streamer::success() const
+{
+  return _success;
+}
+
+void Mp4Streamer::reset()
+{
+  if (!_success) {
+    return;
+  }
+
+  avcodec_flush_buffers(_codec_ctx);
+
+  if (av_seek_frame(_format_ctx, _video_stream_index, 0, AVSEEK_FLAG_BACKWARD) < 0) {
+    std::cerr << "couldn't reset " << _path << std::endl;
+    _success = false;
+    return;
+  }
+
+  _eof = false;
+}
+
+Image Mp4Streamer::next_frame()
+{
+  if (!_success || _eof) {
+    return {};
+  }
+
+  while (true) {
+    int ret = av_read_frame(_format_ctx, _packet);
+
+    if (ret < 0) {
+      // Flush the decoder at EOF.
+      avcodec_send_packet(_codec_ctx, nullptr);
+
+      while (true) {
+        ret = avcodec_receive_frame(_codec_ctx, _frame);
+
+        if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN)) {
+          _eof = true;
+          return {};
+        }
+
+        if (ret < 0) {
+          codec_error("flushing decoder");
+          _success = false;
+          return {};
+        }
+
+        break;
+      }
+    } else {
+      if (_packet->stream_index != _video_stream_index) {
+        av_packet_unref(_packet);
+        continue;
+      }
+
+      ret = avcodec_send_packet(_codec_ctx, _packet);
+      av_packet_unref(_packet);
+
+      if (ret < 0) {
+        codec_error("sending packet to decoder");
+        _success = false;
+        return {};
+      }
+    }
+
+    while (true) {
+      ret = avcodec_receive_frame(_codec_ctx, _frame);
+
+      if (ret == AVERROR(EAGAIN)) {
+        break;
+      }
+
+      if (ret == AVERROR_EOF) {
+        _eof = true;
+        return {};
+      }
+
+      if (ret < 0) {
+        codec_error("decoding frame");
+        _success = false;
+        return {};
+      }
+
+      const int width = _frame->width;
+      const int height = _frame->height;
+
+      sws_scale(_sws_ctx, _frame->data, _frame->linesize, 0, height, _rgb_frame->data,
+                _rgb_frame->linesize);
+
+      std::cout << ";";
+
+      return {static_cast<uint32_t>(width), static_cast<uint32_t>(height), _pixels.get()};
+    }
+  }
+}
+
+void Mp4Streamer::codec_error(const std::string& error)
+{
+  char error_buffer[AV_ERROR_MAX_STRING_SIZE];
+
+  av_strerror(AVERROR_UNKNOWN, error_buffer, sizeof(error_buffer));
+
+  std::cerr << "couldn't load " << _path << ": " << error << ": " << error_buffer << std::endl;
+}
+
 std::unique_ptr<Streamer> load_animation(const std::string& path)
 {
   if (ext_is(path, "gif")) {
@@ -312,6 +545,9 @@ std::unique_ptr<Streamer> load_animation(const std::string& path)
   }
   if (ext_is(path, "webm")) {
     return std::unique_ptr<Streamer>{new WebmStreamer(path)};
+  }
+  if (ext_is(path, "mp4")) {
+    return std::unique_ptr<Streamer>{new Mp4Streamer(path)};
   }
   return {};
 }
