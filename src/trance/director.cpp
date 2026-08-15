@@ -374,11 +374,15 @@ void Director::change_visual(uint32_t length)
   if (t == trance_pb::Program_VisualType_FLASH_TEXT) {
     _visual.reset(new FlashTextVisual{*_visual_api});
   }
-  if (t == trance_pb::Program_VisualType_PARALLEL) {
+  if (t == trance_pb::Program_VisualType_SIMPLE) {
     _visual.reset(new SimpleVisual{*_visual_api});
   }
-  if (t == trance_pb::Program_VisualType_SUPER_PARALLEL) {
+  if (t == trance_pb::Program_VisualType_PARALLEL) {
+    //_visual.reset(new SimpleVisual{*_visual_api});
     _visual.reset(new ParallelVisual{*_visual_api});
+  }
+  if (t == trance_pb::Program_VisualType_SUPER_PARALLEL) {
+    _visual.reset(new SuperParallelVisual{*_visual_api});
   }
   if (t == trance_pb::Program_VisualType_ANIMATION) {
     _visual.reset(new AnimationVisual{*_visual_api});

@@ -275,7 +275,7 @@ bool is_animation(const std::string& path)
 {
   // Should really check is_gif_animated(), but it takes far too long.
     
-  return ext_is(path, "webm") || ext_is(path, "gif");
+  return ext_is(path, "webm") || ext_is(path, "gif") || ext_is(path, "mp4");
 }
 
 bool is_font(const std::string& path)
@@ -379,7 +379,7 @@ void search_resources(trance_pb::Session& session, const std::string& root)
   session.set_first_playlist_item("default");
 }
 
-void search_resources(trance_pb::Theme& theme, const std::string& root)
+void search_resources(trance_pb::Theme& theme, const std::string& root) //searches for resources (font, image, animations)
 {
   std::tr2::sys::path root_path(root);
   for (auto it = std::tr2::sys::recursive_directory_iterator(root_path);

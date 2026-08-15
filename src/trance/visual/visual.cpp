@@ -322,7 +322,70 @@ SimpleVisual::SimpleVisual(VisualControl& api)
   });
 }
 
-ParallelVisual::ParallelVisual(VisualControl& api) : _alternate_animation{true}
+ParallelVisual::ParallelVisual(VisualControl& api)
+: _anim_cycle{2}, _alternate_anim_cycle{0}, _image{api.get_image()}, _alternate{api.get_image(true)}
+{
+  auto counter = new RepeatCycler{4, new ActionCycler{32}};
+
+  auto image = new ActionCycler{64, [&] {
+                                  _image = api.get_image(false);
+                                  if (++_anim_cycle % 3 == 2) {
+                                    api.change_animation(false);
+                                  }
+                                }};
+
+  auto image_alt = new ActionCycler{64, [&] {
+                                      _alternate = api.get_image(true);
+                                      if (++_alternate_anim_cycle % 3 == 1) {
+                                        api.change_animation(true);
+                                      }
+                                    }};
+
+  auto image_alt_off = new OffsetCycler{32, image_alt};
+
+  auto text =
+      new ActionCycler{128, [&] { api.change_text(VisualControl::SPLIT_LINE, random_chance()); }};
+
+  auto main = new ParallelCycler{{counter, image, image_alt_off, text}};
+  auto repeat = new RepeatCycler{16, main};
+
+  auto spiral = new ActionCycler{[&] { api.rotate_spiral(3.f); }};
+
+  auto small_subtext = new ActionCycler{8, [&] { api.change_small_subtext(); }};
+
+  auto upload = new ActionCycler{32, 16, [&] { api.maybe_upload_next(); }};
+
+  auto parallel = new ParallelCycler{{spiral, small_subtext, upload, repeat}};
+
+  auto oneshot = new ActionCycler{[&] {
+    api.change_spiral();
+    api.change_font();
+    api.change_themes();
+  }};
+
+  auto whole = new OneShotCycler{{oneshot, parallel}};
+  set_cycler(whole);
+
+  set_render([=](VisualRender& api) {
+    auto anim = _anim_cycle % 3 == 2 ? VisualRender::Anim::ANIM : VisualRender::Anim::NONE;
+
+    api.render_animation_or_image(anim, _image, 1, 0, .5f * image->progress());
+
+    auto alt_anim = _alternate_anim_cycle % 3 == 1 ? VisualRender::Anim::ANIM_ALTERNATE
+                                                   : VisualRender::Anim::NONE;
+
+    api.render_animation_or_image(alt_anim, _alternate, .5f, 0, .5f * image_alt->progress());
+
+    api.render_spiral();
+    api.render_small_subtext(1.f / 5, .25f);
+
+    if (counter->index() == 1 || counter->index() == 2) {
+      api.render_text(.75f, .75f, .5f * image->progress(), .5f * image->progress());
+    }
+  });
+}
+
+SuperParallelVisual::SuperParallelVisual(VisualControl& api) : _alternate_animation{true}
 {
   std::vector<Cycler*> main_loops;
   std::vector<Cycler*> progress;

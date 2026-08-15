@@ -780,7 +780,7 @@ void ThemePage::RefreshData()
   RefreshOurData();
 }
 
-void ThemePage::RefreshDirectory(const std::string& directory)
+void ThemePage::RefreshDirectory(const std::string& directory) //builds visible tree from search_resources() ?
 {
   *_complete_theme = trance_pb::Theme{};
   search_resources(*_complete_theme, directory);

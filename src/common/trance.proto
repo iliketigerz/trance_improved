@@ -95,6 +95,7 @@ message Program {
     SUPER_PARALLEL = 6;
     ANIMATION = 7;
     SUPER_FAST = 8;
+    SIMPLE = 9;
   }
 
   // Controls enabling/frequency of each theme.
