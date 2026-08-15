@@ -43,6 +43,7 @@ CreatorFrame::CreatorFrame(const std::string& executable_path, const std::string
   menu_file->Append(wxID_NEW);
   menu_file->Append(wxID_OPEN);
   menu_file->Append(wxID_SAVE);
+  menu_file->Append(wxID_SAVEAS);
   menu_file->AppendSeparator();
   menu_file->Append(ID_LAUNCH_SESSION, "&Launch session...\tCtrl+L", "Launch the current session");
   menu_file->Append(ID_VALIDATE_SESSION, "Vali&date session...\tCtrl+D",
@@ -57,12 +58,15 @@ CreatorFrame::CreatorFrame(const std::string& executable_path, const std::string
   menu_file->Append(wxID_EXIT);
   _menu_bar->Append(menu_file, "&File");
   _menu_bar->Enable(wxID_SAVE, false);
+  _menu_bar->Enable(wxID_SAVEAS, false);
   _menu_bar->Enable(ID_LAUNCH_SESSION, false);
   _menu_bar->Enable(ID_VALIDATE_SESSION, false);
   _menu_bar->Enable(ID_EXPORT_VIDEO, false);
  // _menu_bar->Enable(ID_EXPORT_ARCHIVE, false);
   SetMenuBar(_menu_bar);
   CreateStatusBar();
+
+
 
   std::string status = "Running in " + _executable_path;
   try {
@@ -146,6 +150,32 @@ CreatorFrame::CreatorFrame(const std::string& executable_path, const std::string
          //_menu_bar->Enable(ID_EXPORT_ARCHIVE, false); //Disabled as implementation incomplete
        },
        wxID_SAVE);
+
+  Bind(
+      wxEVT_MENU,
+      [&](wxCommandEvent& event) {
+        std::tr2::sys::path current_path{_session_path};
+
+        wxFileDialog dialog{this,
+                            "Save session as",
+                            current_path.parent_path().string(),
+                            current_path.filename().string(),
+                            session_file_pattern,
+                            wxFD_SAVE | wxFD_OVERWRITE_PROMPT};
+
+        if (dialog.ShowModal() == wxID_CANCEL) {
+          return;
+        }
+
+        auto path = std::string{dialog.GetPath()};
+
+        save_session(_session, path);
+        SetSessionPath(path);
+        MakeDirty(false);
+
+        SetStatusText("Wrote " + path);
+      },
+      wxID_SAVEAS);
 
   Bind(wxEVT_MENU,
        [&](wxCommandEvent& event) {
@@ -591,6 +621,7 @@ void CreatorFrame::SetSessionPath(const std::string& path)
 {
   _session_path = path;
   _menu_bar->Enable(wxID_SAVE, true);
+  _menu_bar->Enable(wxID_SAVEAS, true);
   RefreshDirectory();
   _panel->Layout();
   _panel->Show();
