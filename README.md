@@ -4,11 +4,13 @@ It's a program designed to aid self-hypnosis by displaying images, animations an
 
 Main changes:
 
-* MP4 support (!!)
+* MP4 and webp support
 
 * Bug fixes
 
-* Additional visual mode, features that didn't make it into [the v0.3.5 release](https://github.com/ohgodhowdidthis/trance/releases/tag/v0.3.5).
+* "Save session as" 
+
+* Additional "simple" visual mode that didn't make it into [the v0.3.5 release](https://github.com/ohgodhowdidthis/trance/releases/tag/v0.3.5).
 
 Features
 ========
@@ -53,9 +55,13 @@ All parts of a session can be edited with the provided GUI (`creator.exe`).
 Supported file formats
 ======================
 
-* Images: `.jpg`, `.png`, `.bmp`,`.gif`
+* Images: `.jpg`, `.png`, `.bmp`,`.gif`, `.webp`
 * Video: `.mp4`, `.webm`
 * Fonts: `.ttf`
 * Text: `.txt` (only used for generating default sessions)
 * Audio files: `.wav`, `.flac`, `.ogg`, `.aiff`
 * Video export: `.webm`, `.h264`, and (frame-by-frame) `.jpg`, `.png`, or `.bmp`
+
+Known issues
+======================
+* Certain mp4 files cause a crash. HEVC encoded ones definitely will. No MOV support.
