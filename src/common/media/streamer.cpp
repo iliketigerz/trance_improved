@@ -319,7 +319,7 @@ Mp4Streamer::Mp4Streamer(const std::string& path) : _path{path}
     return;
   }
 
-  ret = avformat_find_stream_info(_format_ctx, nullptr);
+  ret = avformat_find_stream_info(_format_ctx, nullptr); //"A breakpoint instruction (__debugbreak() statement or a similar call) was executed in creator.exe."
   if (ret < 0) {
     codec_error("reading stream information", ret);
     return;
@@ -388,6 +388,8 @@ Mp4Streamer::Mp4Streamer(const std::string& path) : _path{path}
   }
 
   const int buffer_size = av_image_get_buffer_size(AV_PIX_FMT_RGBA, width, height, 1);
+
+  std::cout << "MP4 buffer: " << width << "x" << height << ", bytes=" << buffer_size << std::endl;
 
   if (buffer_size <= 0) {
     std::cerr << "couldn't load " << path << ": invalid output image size" << std::endl;
@@ -528,6 +530,10 @@ Image Mp4Streamer::next_frame()
 
       const int width = _frame->width;
       const int height = _frame->height;
+
+      std::cout << "Frame: " << _frame->width << "x" << _frame->height
+                << ", format=" << _frame->format << " | codec: " << _codec_ctx->width << "x"
+                << _codec_ctx->height << ", format=" << _codec_ctx->pix_fmt << std::endl;
 
       sws_scale(_sws_ctx, _frame->data, _frame->linesize, 0, height, _rgb_frame->data,
                 _rgb_frame->linesize);
