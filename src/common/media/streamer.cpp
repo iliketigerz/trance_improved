@@ -549,5 +549,8 @@ std::unique_ptr<Streamer> load_animation(const std::string& path)
   if (ext_is(path, "mp4")) {
     return std::unique_ptr<Streamer>{new Mp4Streamer(path)};
   }
+  if (ext_is(path, "mov")) {
+    return std::unique_ptr<Streamer>{new Mp4Streamer(path)};
+  }
   return {};
 }

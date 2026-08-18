@@ -275,7 +275,7 @@ bool is_animation(const std::string& path)
 {
   // Should really check is_gif_animated(), but it takes far too long.
     
-  return ext_is(path, "webm") || ext_is(path, "gif") || ext_is(path, "mp4");
+  return ext_is(path, "webm") || ext_is(path, "gif") || ext_is(path, "mp4") || ext_is(path, "mov");
 }
 
 bool is_font(const std::string& path)
