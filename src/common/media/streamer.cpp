@@ -8,6 +8,10 @@
 #include <giflib/gif_lib.h>
 #pragma warning(pop)
 
+extern "C"
+    __declspec(dllimport) int __stdcall MessageBoxA(void* hWnd, const char* lpText,
+                                                    const char* lpCaption, unsigned int uType);
+
 GifStreamer::GifStreamer(const std::string& path) : _path{path}
 {
   int error_code = 0;
@@ -311,13 +315,13 @@ Mp4Streamer::Mp4Streamer(const std::string& path) : _path{path}
 
   ret = avformat_open_input(&_format_ctx, path.c_str(), nullptr, nullptr);
   if (ret < 0) {
-    codec_error("opening file");
+    codec_error("opening file", ret);
     return;
   }
 
   ret = avformat_find_stream_info(_format_ctx, nullptr);
   if (ret < 0) {
-    codec_error("reading stream information");
+    codec_error("reading stream information", ret);
     return;
   }
 
@@ -352,13 +356,13 @@ Mp4Streamer::Mp4Streamer(const std::string& path) : _path{path}
   ret = avcodec_parameters_to_context(_codec_ctx, _video_stream->codecpar);
 
   if (ret < 0) {
-    codec_error("copying codec parameters");
+    codec_error("copying codec parameters", ret);
     return;
   }
 
   ret = avcodec_open2(_codec_ctx, _codec, nullptr);
   if (ret < 0) {
-    codec_error("opening decoder");
+    codec_error("opening decoder", ret);
     return;
   }
 
@@ -396,7 +400,7 @@ Mp4Streamer::Mp4Streamer(const std::string& path) : _path{path}
                              width, height, 1);
 
   if (ret < 0) {
-    codec_error("creating RGB frame");
+    codec_error("creating RGB frame", ret);
     return;
   }
 
@@ -475,7 +479,7 @@ Image Mp4Streamer::next_frame()
         }
 
         if (ret < 0) {
-          codec_error("flushing decoder");
+          codec_error("flushing decoder", ret);
           _success = false;
           return {};
         }
@@ -492,7 +496,13 @@ Image Mp4Streamer::next_frame()
       av_packet_unref(_packet);
 
       if (ret < 0) {
-        codec_error("sending packet to decoder");
+        if (ret == AVERROR_INVALIDDATA) {
+          std::cerr << "warning: invalid video packet in " << _path << ", skipping" << std::endl;
+          //std::cout << "warning: invalid video packet in " << _path << ", skipping" << std::endl;
+          continue;
+        }
+
+        codec_error("sending packet to decoder", ret);
         _success = false;
         return {};
       }
@@ -511,7 +521,7 @@ Image Mp4Streamer::next_frame()
       }
 
       if (ret < 0) {
-        codec_error("decoding frame");
+        codec_error("decoding frame", ret);
         _success = false;
         return {};
       }
@@ -529,13 +539,20 @@ Image Mp4Streamer::next_frame()
   }
 }
 
-void Mp4Streamer::codec_error(const std::string& error)
+void Mp4Streamer::codec_error(const std::string& error, int error_code)
 {
   char error_buffer[AV_ERROR_MAX_STRING_SIZE];
 
-  av_strerror(AVERROR_UNKNOWN, error_buffer, sizeof(error_buffer));
+  av_strerror(error_code, error_buffer, sizeof(error_buffer));
 
-  std::cerr << "couldn't load " << _path << ": " << error << ": " << error_buffer << std::endl;
+  std::string message = "couldn't load " + _path + ": " + error + ": " + error_buffer + " (code " +
+      std::to_string(error_code) + ")";
+
+  std::cerr << message << std::endl;
+
+  MessageBoxA(nullptr, message.c_str(), "Error", 0x10);
+
+ // MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR);
 }
 
 std::unique_ptr<Streamer> load_animation(const std::string& path)

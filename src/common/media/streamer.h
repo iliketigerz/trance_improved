@@ -94,7 +94,7 @@ public:
   Image next_frame() override;
 
 private:
-  void codec_error(const std::string& error);
+  void codec_error(const std::string& error, int error_code);
 
   std::string _path;
 
